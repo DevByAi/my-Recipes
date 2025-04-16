@@ -510,11 +510,33 @@ class RecipeManager {
             if (canShare) {
                 modalContent.querySelector('.share-recipe-btn').addEventListener('click', async () => {
                     try {
-                        const shareText = `${recipe.name}\n\nקטגוריה: ${recipe.category}\nזמן הכנה: ${recipe.prepTime || 'לא צוין'} דקות\n\nלמתכון המלא:\nhttps://devbyai.github.io/my-Recipes/`;
+                        // יצירת טקסט השיתוף
+                        const shareText = `ספר המתכונים שלי\ndevbyai.github.io\n\n${recipe.name}\n\nקטגוריה: ${recipe.category}\nזמן הכנה: ${recipe.prepTime || 'לא צוין'} דקות\n\nלמתכון המלא:\nhttps://devbyai.github.io/my-Recipes/`;
+
+                        // יצירת קובץ JSON
+                        const recipeData = {
+                            name: recipe.name.trim(),
+                            category: recipe.category.trim(),
+                            prepTime: recipe.prepTime ? recipe.prepTime.toString().trim() : "לא צוין",
+                            storageInstructions: recipe.storageInstructions ? recipe.storageInstructions.trim() : "",
+                            ingredients: recipe.ingredients.map(i => i.trim()).filter(i => i),
+                            instructions: recipe.instructions.map(i => i.trim()).filter(i => i),
+                            externalLink: recipe.externalLink ? recipe.externalLink.trim() : null,
+                            exportDate: new Date().toISOString(),
+                            version: '1.0',
+                            textDirection: 'rtl'
+                        };
+
+                        const jsonStr = JSON.stringify(recipeData, null, 2);
+                        const blob = new Blob([jsonStr], { type: 'application/json' });
+                        const filename = `מתכון.json`;
+                        const file = new File([blob], filename, { type: 'application/json' });
+
+                        // שיתוף הטקסט והקובץ
                         await navigator.share({
                             title: `מתכון: ${recipe.name}`,
                             text: shareText,
-                            url: 'https://devbyai.github.io/my-Recipes/'
+                            files: [file]
                         });
                     } catch (error) {
                         console.error('Error sharing:', error);
