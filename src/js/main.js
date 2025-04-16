@@ -11,11 +11,21 @@ class RecipeManager {
                 'סלטים',
                 'תוספות'
             ];
-            this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+            
+            // Dark mode initialization
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const savedTheme = localStorage.getItem('theme');
+            this.isDarkMode = savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches);
+            
             this.currentEditingId = null;
             this.showingFavorites = false;
-            this.setupEventListeners();
+            
+            // Initialize other features
             this.initializeDarkMode();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
             this.renderRecipes();
             this.updateCategorySelects();
             this.setupRecipeDragAndDrop();
@@ -34,6 +44,37 @@ class RecipeManager {
             
             // Set up event listeners for import/export instructions
             this.setupImportExportInstructionsListeners();
+
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            
+            function updateDarkModeButton(isDark) {
+                const icon = darkModeToggle.querySelector('i');
+                const text = darkModeToggle.querySelector('span');
+                if (isDark) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    text.textContent = 'מצב בהיר';
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    text.textContent = 'מצב חשוך';
+                }
+            }
+
+            // Check if user has a theme preference in localStorage
+            const currentTheme = localStorage.getItem('theme');
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+                updateDarkModeButton(currentTheme === 'dark');
+            } else if (prefersDarkScheme.matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                updateDarkModeButton(true);
+            }
+
+            darkModeToggle.addEventListener('click', () => {
+                this.toggleDarkMode();
+            });
         } catch (error) {
             console.error('Error initializing RecipeManager:', error);
             this.recipes = [];
@@ -65,13 +106,39 @@ class RecipeManager {
             this.deleteAllRecipes();
         });
         document.getElementById('darkModeToggle').addEventListener('click', () => {
-            this.closeMobileMenu();
             this.toggleDarkMode();
         });
-        document.getElementById('mobileMenuBtn').addEventListener('click', () => this.toggleMobileMenu());
         document.getElementById('aboutBtn').addEventListener('click', () => {
             this.closeMobileMenu();
             this.showAboutModal();
+        });
+
+        // Mobile menu button
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleMobileMenu();
+            });
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const navLinks = document.querySelector('.nav-links');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            if (navLinks && navLinks.classList.contains('active') && 
+                !navLinks.contains(e.target) && 
+                !mobileMenuBtn.contains(e.target)) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // Close mobile menu when window is resized
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                this.closeMobileMenu();
+            }
         });
 
         // Setup drag and drop
@@ -99,17 +166,6 @@ class RecipeManager {
 
         // Recipe form
         document.getElementById('recipeForm').addEventListener('submit', (e) => this.handleRecipeSubmit(e));
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', (e) => {
-            const navLinks = document.querySelector('.nav-links');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            if (navLinks.classList.contains('active') && 
-                !navLinks.contains(e.target) && 
-                !mobileMenuBtn.contains(e.target)) {
-                this.closeMobileMenu();
-            }
-        });
 
         // Add manage categories button event
         document.getElementById('manageCategoriesBtn').addEventListener('click', () => this.showCategoryModal());
@@ -149,34 +205,71 @@ class RecipeManager {
 
     // Dark Mode
     initializeDarkMode() {
-        if (this.isDarkMode) {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('darkModeToggle').innerHTML = '<i class="fas fa-sun"></i>';
-        }
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (!darkModeToggle) return;
+
+        // Set initial state
+        document.documentElement.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+
+        // Update button state
+        const icon = darkModeToggle.querySelector('i') || document.createElement('i');
+        const text = darkModeToggle.querySelector('span') || document.createElement('span');
+        
+        icon.className = `fas ${this.isDarkMode ? 'fa-sun' : 'fa-moon'}`;
+        text.textContent = this.isDarkMode ? 'מצב בהיר' : 'מצב חשוך';
+        
+        if (!darkModeToggle.contains(icon)) darkModeToggle.appendChild(icon);
+        if (!darkModeToggle.contains(text)) darkModeToggle.appendChild(text);
+
+        // Add event listener
+        darkModeToggle.addEventListener('click', () => this.toggleDarkMode());
+
+        // Listen for system theme changes
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        prefersDarkScheme.addListener((e) => {
+            if (!localStorage.getItem('theme')) {
+                this.isDarkMode = e.matches;
+                this.updateDarkModeState();
+            }
+        });
     }
 
     toggleDarkMode() {
         this.isDarkMode = !this.isDarkMode;
-        document.body.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light');
-        document.getElementById('darkModeToggle').innerHTML = this.isDarkMode ? 
-            '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        localStorage.setItem('darkMode', this.isDarkMode);
+        this.updateDarkModeState();
+    }
+
+    updateDarkModeState() {
+        // Update DOM
+        document.documentElement.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+        
+        // Update button
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (!darkModeToggle) return;
+
+        const icon = darkModeToggle.querySelector('i');
+        const text = darkModeToggle.querySelector('span');
+        
+        if (icon && text) {
+            icon.className = `fas ${this.isDarkMode ? 'fa-sun' : 'fa-moon'}`;
+            text.textContent = this.isDarkMode ? 'מצב בהיר' : 'מצב חשוך';
+        }
     }
 
     // Mobile Menu
     toggleMobileMenu() {
         const navLinks = document.querySelector('.nav-links');
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const isOpen = navLinks.classList.contains('active');
         
         if (isOpen) {
             navLinks.classList.remove('active');
-            mobileMenuBtn.classList.remove('active');
             mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
             document.body.style.overflow = '';
         } else {
             navLinks.classList.add('active');
-            mobileMenuBtn.classList.add('active');
             mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
             document.body.style.overflow = 'hidden';
         }
@@ -185,9 +278,8 @@ class RecipeManager {
     // Add method to close mobile menu
     closeMobileMenu() {
         const navLinks = document.querySelector('.nav-links');
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         navLinks.classList.remove('active');
-        mobileMenuBtn.classList.remove('active');
         mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
         document.body.style.overflow = '';
     }
@@ -835,6 +927,8 @@ class RecipeManager {
                     
                     this.recipes = [...this.recipes, ...validRecipes];
                     this.saveRecipes();
+                    
+                    // קריאה מחדש לרינדור כדי להוסיף את כל מאזיני האירועים
                     this.renderRecipes();
                     
                     alert(`יובאו ${validRecipes.length} מתכונים בהצלחה!`);

@@ -1,13 +1,24 @@
 :root {
     /* Light mode colors */
     --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
+    --bg-secondary: #f8f9fa;
     --text-primary: #333333;
     --text-secondary: #666666;
-    --accent-color: #4CAF50;
     --border-color: #e0e0e0;
-    --modal-bg: #ffffff;
-    --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --accent-color: #28a745;
+    --danger-color: #dc3545;
+    --success-color: #28a745;
+    --warning-color: #f8f9fa;
+    --favorite-color: #666666;
+    --modal-bg: rgba(0, 0, 0, 0.5);
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --hover-bg: #f0f0f0;
+    --btn-primary-bg: #f8f9fa;
+    --btn-primary-text: #333333;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-text: #ffffff;
+    --btn-success-bg: #28a745;
+    --btn-success-text: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -16,8 +27,22 @@
     --bg-secondary: #2d2d2d;
     --text-primary: #ffffff;
     --text-secondary: #cccccc;
-    --accent-color: #66bb6a;
     --border-color: #404040;
+    --accent-color: #28a745;
+    --danger-color: #dc3545;
+    --success-color: #28a745;
+    --warning-color: #2d2d2d;
+    --favorite-color: #cccccc;
+    --modal-bg: rgba(0, 0, 0, 0.7);
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --hover-bg: #3d3d3d;
+    --btn-primary-bg: #2d2d2d;
+    --btn-primary-text: #ffffff;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-text: #ffffff;
+    --btn-success-bg: #28a745;
+    --btn-success-text: #ffffff;
+    --accent-color: #66bb6a;
     --modal-bg: #2d2d2d;
     --card-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
@@ -64,59 +89,74 @@ body {
     color: var(--text-primary);
     font-size: 1.5rem;
     cursor: pointer;
-    padding: 0.8rem;
+    padding: 0.5rem;
     z-index: 1001;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .mobile-menu-btn:hover {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
 }
 
 .mobile-menu-btn i {
     pointer-events: none;
     font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .mobile-menu-btn {
+    color: #fff;
+}
+
+[data-theme="dark"] .mobile-menu-btn i {
+    color: #fff;
 }
 
 /* Buttons */
 .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
 }
 
 .btn:hover {
-    background-color: var(--bg-secondary);
-}
-
-.primary-btn {
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-}
-
-.primary-btn:hover {
-    background-color: var(--accent-color);
     opacity: 0.9;
+    transform: translateY(-1px);
 }
 
-.danger-btn {
-    background-color: #dc3545;
+.btn.danger-btn {
+    background-color: var(--btn-danger-bg);
+    color: var(--btn-danger-text);
+}
+
+.btn.success-btn {
+    background-color: var(--btn-success-bg);
+    color: var(--btn-success-text);
+}
+
+.favorite-btn {
+    background-color: var(--favorite-color);
     color: white;
 }
 
-.danger-btn:hover {
-    background-color: #c82333;
+.favorite-btn:hover {
+    background-color: var(--favorite-color);
+    opacity: 0.9;
 }
 
 /* Search Section */
@@ -140,6 +180,11 @@ body {
     border-radius: 4px;
     background-color: var(--bg-primary);
     color: var(--text-primary);
+}
+
+.search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
 }
 
 .category-select {
@@ -200,11 +245,12 @@ body {
 }
 
 .recipe-card {
-    background: var(--bg-secondary);
-    border-radius: 8px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
     padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow);
+    transition: all 0.2s ease;
     position: relative;
 }
 
@@ -216,7 +262,7 @@ body {
 
 .recipe-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .recipe-card h3 {
@@ -310,15 +356,15 @@ body {
 }
 
 .modal-content {
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 2rem;
-    border-radius: 8px;
     max-width: 90%;
     width: 600px;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    box-shadow: var(--card-shadow);
 }
 
 .close-btn {
@@ -397,108 +443,145 @@ body {
     resize: vertical;
 }
 
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Save buttons styles */
+#saveRecipeBtn, 
+#saveLinkRecipeBtn,
+#saveButton,
+button[type="submit"],
+.save-btn {
+    background-color: var(--btn-success-bg);
+    color: white;
+}
+
+#saveRecipeBtn:hover,
+#saveLinkRecipeBtn:hover,
+#saveButton:hover,
+button[type="submit"]:hover,
+.save-btn:hover {
+    opacity: 0.9;
+    background-color: var(--btn-success-bg);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .top-nav {
-        position: relative;
+    .nav-container {
+        flex-wrap: wrap;
+        justify-content: space-between;
         padding: 0.5rem 1rem;
+        gap: 0.5rem;
+        position: relative;
+    }
+
+    .nav-brand {
+        order: 1;
+        margin: 0;
+        flex: 1;
+        font-size: 1.3rem;
+    }
+
+    #addRecipeBtn {
+        order: 2;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .mobile-menu-btn {
+        order: 3;
+        display: flex !important;
     }
 
     .nav-links {
         display: none;
         position: fixed;
-        top: 0;
+        top: 60px;
         right: 0;
-        width: 100%;
-        height: 100vh;
+        left: 0;
         background-color: var(--bg-primary);
-        flex-direction: column;
-        padding: 5rem 2rem 2rem;
+        padding: 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         z-index: 1000;
-        gap: 1.5rem;
-        align-items: stretch;
+        margin: 0;
+        flex-direction: column;
+        width: 100%;
+        height: calc(100vh - 60px);
         overflow-y: auto;
     }
 
     .nav-links.active {
-        display: flex;
+        display: flex !important;
     }
 
-    .mobile-menu-btn {
-        display: flex;
-        position: relative;
-        z-index: 1002;
-        background: none;
-        border: none;
-        color: var(--text-primary);
-        border-radius: 8px;
-        width: 44px;
-        height: 44px;
-    }
-
-    .mobile-menu-btn.active {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-    }
-
-    .nav-links .btn {
+    .nav-links button {
         width: 100%;
-        justify-content: center;
+        text-align: right;
         padding: 1rem;
-        font-size: 1.1rem;
-        background: none;
+        justify-content: flex-start;
         border: none;
-        border-radius: 8px;
-        margin: 0;
-        transition: all 0.3s ease;
+        background: var(--bg-primary);
         color: var(--text-primary);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        border-bottom: 1px solid var(--border-color);
+        margin: 0;
     }
 
-    .nav-links .btn:hover {
+    .nav-links button:last-child {
+        border-bottom: none;
+    }
+
+    .nav-links button:hover {
         background-color: var(--bg-secondary);
     }
 
-    .nav-links .primary-btn {
-        background-color: var(--accent-color);
-        color: white;
+    .nav-links button i {
+        margin-left: 0.8rem;
+        width: 20px;
+        text-align: center;
     }
 
-    .nav-links .primary-btn:hover {
-        background-color: var(--accent-color);
-        opacity: 0.9;
+    .nav-links button span {
+        margin-right: 0.5rem;
+        font-weight: normal;
+        display: inline-block;
     }
 
-    .nav-links .danger-btn {
-        background-color: #dc3545;
-        color: white;
+    /* Ensure the menu appears above other content */
+    nav {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background-color: var(--bg-primary);
+        border-bottom: 1px solid var(--border-color);
     }
 
-    .nav-links .danger-btn:hover {
-        background-color: #c82333;
+    /* Add overlay when menu is open */
+    .nav-links.active::before {
+        content: '';
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
     }
 
-    .nav-links .btn i {
-        margin-left: 0.5rem;
-        font-size: 1.2rem;
+    /* Dark mode specific styles */
+    [data-theme="dark"] .nav-links button {
+        color: #fff;
+        background: var(--bg-primary);
     }
 
-    .nav-brand {
-        font-size: 1.3rem;
-    }
-
-    .search-container {
-        flex-direction: column;
-    }
-
-    .recipes-grid {
-        grid-template-columns: 1fr;
-        padding: 1rem;
-    }
-
-    .modal-content {
-        margin: 1rem;
-        padding: 1rem;
+    [data-theme="dark"] .nav-links button:hover {
+        background-color: var(--bg-secondary);
     }
 }
 
@@ -893,7 +976,7 @@ body {
 
 /* Filter Change Notification */
 .favorite-notification.filter-change {
-    background-color: #2196F3;  /* צבע כחול יפה */
+    background-color: var(--accent-color);
 }
 
 .favorite-notification.filter-change i {
@@ -1025,4 +1108,197 @@ body {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
+}
+
+/* Navigation Styles */
+nav {
+    background-color: var(--bg-primary);
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.nav-links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-right: auto;
+}
+
+.nav-links button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    background-color: var(--btn-primary-bg);
+    color: var(--text-primary);
+}
+
+.nav-links button:hover {
+    background-color: var(--bg-secondary);
+    transform: translateY(-1px);
+}
+
+/* Specific button colors */
+#addRecipeBtn {
+    background-color: var(--btn-success-bg);
+    color: white;
+}
+
+#importAllBtn, #exportAllBtn, #darkModeToggle, #aboutBtn {
+    background-color: var(--btn-primary-bg);
+    color: var(--text-primary);
+}
+
+#deleteAllBtn {
+    background-color: var(--btn-danger-bg);
+    color: white;
+}
+
+/* Mobile menu styles */
+@media (max-width: 768px) {
+    .nav-links {
+        background-color: var(--bg-primary);
+        border-right: 1px solid var(--border-color);
+    }
+
+    .nav-links button {
+        width: 100%;
+        text-align: right;
+        padding: 1rem;
+        justify-content: flex-start;
+        border-radius: 0;
+        border-bottom: 1px solid var(--border-color);
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .nav-links button:last-child {
+        border-bottom: none;
+    }
+
+    .nav-links button i {
+        margin-left: 0.8rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .nav-links button:hover {
+        transform: none;
+        opacity: 0.9;
+    }
+
+    /* Keep button colors in mobile */
+    .nav-links #addRecipeBtn {
+        background-color: var(--btn-success-bg);
+        color: white;
+    }
+
+    .nav-links #deleteAllBtn {
+        background-color: var(--btn-danger-bg);
+        color: white;
+    }
+
+    .nav-links #importAllBtn,
+    .nav-links #exportAllBtn,
+    .nav-links #darkModeToggle,
+    .nav-links #aboutBtn {
+        background-color: var(--btn-primary-bg);
+        color: var(--text-primary);
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .recipe-card {
+        padding: 0.75rem;
+    }
+
+    .recipe-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-content {
+        padding: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .recipe-view {
+        padding: 0.75rem;
+    }
+
+    .recipe-view h2 {
+        font-size: 1.5rem;
+    }
+
+    .ingredients-list, .instructions-list {
+        padding-right: 1rem;
+    }
+}
+
+/* Dark Mode Toggle Button */
+#darkModeToggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+#darkModeToggle:hover {
+    background-color: var(--bg-secondary);
+}
+
+#darkModeToggle i {
+    font-size: 1.1rem;
+}
+
+/* Mobile Dark Mode Toggle */
+@media (max-width: 768px) {
+    .nav-links #darkModeToggle {
+        width: 100%;
+        justify-content: flex-start;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
+        padding: 1rem;
+    }
+
+    .nav-links #darkModeToggle i {
+        margin-left: 0.8rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .nav-links #darkModeToggle:hover {
+        background-color: var(--bg-secondary);
+    }
 }

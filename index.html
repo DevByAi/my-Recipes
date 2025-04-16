@@ -10,37 +10,43 @@
 </head>
 <body>
     <header>
-        <nav class="top-nav">
-            <div class="nav-brand">ספר המתכונים שלי</div>
-            <div class="nav-links">
+        <nav>
+            <div class="nav-container">
+                <div class="nav-brand">ספר המתכונים שלי</div>
                 <button id="addRecipeBtn" class="btn primary-btn">
-                    <i class="fas fa-plus"></i> מתכון חדש
+                    <i class="fas fa-plus"></i>
+                    <span>מתכון חדש</span>
                 </button>
-                <button id="importAllBtn" class="btn">
-                    <i class="fas fa-file-import"></i> ייבוא מתכונים
-                </button>
-                <button id="exportAllBtn" class="btn">
-                    <i class="fas fa-file-export"></i> ייצוא מתכונים
-                </button>
-                <button id="deleteAllBtn" class="btn danger-btn">
-                    <i class="fas fa-trash-alt"></i> מחק את כל המתכונים
-                </button>
-                <button id="manageCategoriesBtn" class="btn">
-                    <i class="fas fa-tags"></i> ניהול קטגוריות
-                </button>
-                <button id="darkModeToggle" class="btn">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <button id="aboutBtn" class="btn">
-                    <i class="fas fa-info-circle"></i> אודות
-                </button>
-                <button id="runTestsBtn" class="btn dev-only" style="display: none;">
-                    <i class="fas fa-vial"></i> הרץ בדיקות
+                <div class="nav-links">
+                    <button id="importAllBtn" class="btn">
+                        <i class="fas fa-file-import"></i>
+                        <span>ייבא מתכונים</span>
+                    </button>
+                    <button id="exportAllBtn" class="btn">
+                        <i class="fas fa-file-export"></i>
+                        <span>ייצא מתכונים</span>
+                    </button>
+                    <button id="deleteAllBtn" class="btn danger-btn">
+                        <i class="fas fa-trash"></i>
+                        <span>מחק הכל</span>
+                    </button>
+                    <button id="darkModeToggle" class="btn">
+                        <i class="fas fa-moon"></i>
+                        <span>מצב חשוך</span>
+                    </button>
+                    <button id="aboutBtn" class="btn">
+                        <i class="fas fa-info-circle"></i>
+                        <span>אודות</span>
+                    </button>
+                    <button id="manageCategoriesBtn" class="btn">
+                        <i class="fas fa-tags"></i>
+                        <span>נהל קטגוריות</span>
+                    </button>
+                </div>
+                <button id="mobileMenuBtn" class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
                 </button>
             </div>
-            <button id="mobileMenuBtn" class="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </button>
         </nav>
     </header>
 
@@ -200,3 +206,88 @@
 
     <script src="src/js/main.js"></script>
     <!-- Load tests only in development -->
+
+    <style>
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            position: relative;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-left: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-right: auto;
+        }
+
+        .mobile-only {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-wrap: wrap;
+                justify-content: space-between;
+                padding: 0.5rem;
+            }
+
+            .nav-brand {
+                order: 1;
+                margin: 0;
+                flex: 1;
+            }
+
+            #addRecipeBtn {
+                order: 2;
+            }
+
+            #mobileMenuBtn {
+                order: 3;
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                left: 0;
+                background: var(--bg-primary);
+                padding: 1rem;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                z-index: 1000;
+                border-top: 1px solid var(--border-color);
+                margin: 0;
+                width: 100%;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links button {
+                width: 100%;
+                text-align: right;
+                padding: 0.8rem;
+                justify-content: flex-start;
+            }
+
+            .nav-links button span {
+                margin-right: 8px;
+            }
+        }
+    </style>
