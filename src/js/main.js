@@ -20,6 +20,12 @@ class RecipeManager {
             this.updateCategorySelects();
             this.setupRecipeDragAndDrop();
 
+            // בדיקה אם כבר הוצגה ההודעה על העדכון
+            const updateNotificationShown = localStorage.getItem('updateNotificationShown');
+            if (!updateNotificationShown) {
+                this.showUpdateNotification();
+            }
+
             // Import/Export Instructions Modal
             this.importExportInstructionsModal = document.getElementById('importExportInstructionsModal');
             this.dontShowAgainBtn = document.getElementById('dontShowAgainBtn');
@@ -305,11 +311,26 @@ class RecipeManager {
 
     // Add method to format recipe as text
     formatRecipeAsText(recipe) {
-        if (recipe.externalLink) {
-            return `${recipe.name}\n\nקטגוריה: ${recipe.category}\n\nקישור למתכון:\n${recipe.externalLink}`;
-        } else {
-            return `${recipe.name}\n\nקטגוריה: ${recipe.category}\n\nמרכיבים:\n${recipe.ingredients.map(i => `• ${i}`).join('\n\n')}\n\nהוראות הכנה:\n${recipe.instructions.map((i, index) => `${index + 1}. ${i}`).join('\n\n')}`;
+        let text = `${recipe.name}\n`;
+        text += `=================\n\n`;
+        text += `קטגוריה: ${recipe.category}\n`;
+        text += `זמן הכנה: ${recipe.prepTime || 'לא צוין'} דקות\n`;
+        
+        if (recipe.storageInstructions) {
+            text += `\nהמלצות שמירה:\n${recipe.storageInstructions}\n`;
         }
+
+        if (recipe.externalLink) {
+            text += `\nקישור למתכון:\n${recipe.externalLink}\n`;
+        } else {
+            text += `\nמרכיבים:\n`;
+            text += recipe.ingredients.map(i => `• ${i}`).join('\n');
+            
+            text += `\n\nהוראות הכנה:\n`;
+            text += recipe.instructions.map((i, index) => `${index + 1}. ${i}`).join('\n');
+        }
+
+        return text;
     }
 
     // Add method to generate filename for recipe
@@ -333,18 +354,21 @@ class RecipeManager {
     // Add method to share recipe as JSON
     async shareRecipeAsJSON(recipe) {
         try {
-            // Create JSON data
-            const recipeData = {
-                name: recipe.name,
-                category: recipe.category,
-                ingredients: recipe.ingredients,
-                instructions: recipe.instructions,
-                externalLink: recipe.externalLink || null,
+            // נקה ותקן את הערכים
+            const cleanRecipe = {
+                name: recipe.name.trim(),
+                category: recipe.category.trim(),
+                prepTime: recipe.prepTime ? recipe.prepTime.toString().trim() : "לא צוין",
+                storageInstructions: recipe.storageInstructions ? recipe.storageInstructions.trim() : "",
+                ingredients: recipe.ingredients.map(i => i.trim()).filter(i => i),
+                instructions: recipe.instructions.map(i => i.trim()).filter(i => i),
+                externalLink: recipe.externalLink ? recipe.externalLink.trim() : null,
                 exportDate: new Date().toISOString(),
-                version: '1.0'
+                version: '1.0',
+                textDirection: 'rtl'
             };
             
-            const jsonStr = JSON.stringify(recipeData, null, 2);
+            const jsonStr = JSON.stringify(cleanRecipe, null, 2);
             const blob = new Blob([jsonStr], { type: 'application/json' });
             const filename = this.generateRecipeFilename(recipe);
             
@@ -352,8 +376,8 @@ class RecipeManager {
             if (navigator.share && navigator.canShare) {
                 const file = new File([blob], filename, { type: 'application/json' });
                 const shareData = {
-                    title: recipe.name,
-                    text: `הנה המתכון ל${recipe.name} ששתפתי מהאתר שלי. תוכל להוסיף אותו לספר המתכונים שלך!`,
+                    title: cleanRecipe.name,
+                    text: `הנה המתכון ל${cleanRecipe.name} ששתפתי מהאתר שלי. תוכל להוסיף אותו לספר המתכונים שלך!`,
                     files: [file]
                 };
                 
@@ -372,20 +396,35 @@ class RecipeManager {
     }
 
     // Add method to copy text and show notification
-    async copyToClipboard(text) {
+    copyToClipboard(text) {
         try {
-            const shareText = "הנה המתכון/ים ששמתי באתר, תוכל לעשות שהם ישמרו גם אצלך על ידי הדבקת המתכון לאתר https://devbyai.github.io/my-Recipes/\n\n";
-            await navigator.clipboard.writeText(shareText + text);
+            // יצירת אלמנט textarea זמני
+            const textArea = document.createElement('textarea');
+            const websiteLink = "קישור לאתר המתכונים: https://devbyai.github.io/my-Recipes/";
+            textArea.value = `${text}\n\n${websiteLink}`;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            
+            // בחירת הטקסט והעתקה
+            textArea.select();
+            document.execCommand('copy');
+            
+            // הסרת האלמנט הזמני
+            document.body.removeChild(textArea);
+            
+            // הצגת הודעת הצלחה
             const notification = document.createElement('div');
             notification.className = 'copy-success';
             notification.textContent = 'המתכון הועתק בהצלחה!';
             document.body.appendChild(notification);
             
-            // Remove notification after animation
+            // הסרת ההודעה אחרי האנימציה
             setTimeout(() => {
                 notification.remove();
             }, 2000);
         } catch (err) {
+            console.error('Error copying text:', err);
             alert('לא הצלחנו להעתיק את המתכון. נסה שוב.');
         }
     }
@@ -393,12 +432,19 @@ class RecipeManager {
     showViewModal(recipe) {
         const modal = document.getElementById('recipeModal');
         const content = document.getElementById('recipeModalContent');
+        const canShare = navigator.share !== undefined;
         
         content.innerHTML = `
             <div class="recipe-view">
                 <h2>${recipe.name}</h2>
                 <p class="category">${recipe.category}</p>
                 <p class="prep-time"><i class="fas fa-clock"></i> זמן הכנה: ${recipe.prepTime || 'לא צוין'} דקות</p>
+                ${recipe.storageInstructions ? `
+                <div class="storage-instructions">
+                    <h3><i class="fas fa-box"></i> המלצות שמירה:</h3>
+                    <p>${recipe.storageInstructions}</p>
+                </div>
+                ` : ''}
                 <div class="recipe-actions">
                     <button class="btn edit-recipe-btn">
                         <i class="fas fa-edit"></i> ערוך
@@ -412,12 +458,15 @@ class RecipeManager {
                             <i class="fas fa-external-link-alt"></i> צפה במתכון המקורי
                         </a>
                     ` : `
-                        <button class="btn export-recipe-btn">
-                            <i class="fas fa-file-export"></i> ייצא מתכון
-                        </button>
-                        <button class="btn share-recipe-btn">
-                            <i class="fas fa-share-alt"></i> שתף מתכון
-                        </button>
+                        ${canShare ? `
+                            <button class="btn share-recipe-btn">
+                                <i class="fas fa-share-alt"></i> שתף מתכון
+                            </button>
+                        ` : `
+                            <button class="btn export-recipe-btn">
+                                <i class="fas fa-file-export"></i> ייצא מתכון
+                            </button>
+                        `}
                         <button class="btn copy-recipe-btn">
                             <i class="fas fa-copy"></i> העתק מתכון
                         </button>
@@ -457,19 +506,33 @@ class RecipeManager {
             `;
         });
 
-        modalContent.querySelector('.export-recipe-btn').addEventListener('click', () => {
-            this.showImportExportInstructions();
-            this.exportRecipes([recipe.id]);
-        });
+        if (!recipe.externalLink) {
+            if (canShare) {
+                modalContent.querySelector('.share-recipe-btn').addEventListener('click', async () => {
+                    try {
+                        const shareText = `${recipe.name}\n\nקטגוריה: ${recipe.category}\nזמן הכנה: ${recipe.prepTime || 'לא צוין'} דקות\n\nלמתכון המלא:\nhttps://devbyai.github.io/my-Recipes/`;
+                        await navigator.share({
+                            title: `מתכון: ${recipe.name}`,
+                            text: shareText,
+                            url: 'https://devbyai.github.io/my-Recipes/'
+                        });
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                        alert('אירעה שגיאה בשיתוף המתכון. אנא נסה שוב.');
+                    }
+                });
+            } else {
+                modalContent.querySelector('.export-recipe-btn').addEventListener('click', () => {
+                    this.showImportExportInstructions();
+                    this.exportRecipes([recipe.id]);
+                });
+            }
 
-        modalContent.querySelector('.share-recipe-btn').addEventListener('click', () => {
-            this.shareRecipeAsJSON(recipe);
-        });
-
-        modalContent.querySelector('.copy-recipe-btn').addEventListener('click', () => {
-            const text = this.formatRecipeAsText(recipe);
-            this.copyToClipboard(text);
-        });
+            modalContent.querySelector('.copy-recipe-btn').addEventListener('click', () => {
+                const text = this.formatRecipeAsText(recipe);
+                this.copyToClipboard(text);
+            });
+        }
 
         modalContent.querySelector('.delete-modal-btn').addEventListener('click', () => {
             this.deleteRecipe(recipe.id);
@@ -487,51 +550,52 @@ class RecipeManager {
     }
 
     // Form Handling
-    handleRecipeSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
+    handleRecipeSubmit(event) {
+        event.preventDefault();
+        const name = document.getElementById('recipeName').value;
+        const category = document.getElementById('recipeCategory').value;
+        const prepTime = document.getElementById('prepTime').value;
+        const storageInstructions = document.getElementById('storageInstructions').value;
+        const isKosher = document.getElementById('isKosher')?.checked || false;
+        const isVegan = document.getElementById('isVegan')?.checked || false;
+        const isGlutenFree = document.getElementById('isGlutenFree')?.checked || false;
         
-        // Validate inputs
-        const name = form.recipeName.value.trim();
-        const category = form.recipeCategory.value;
-        const prepTime = parseInt(form.prepTime.value);
-        const externalLink = form.recipeLink.value.trim();
+        // בדיקה אם זה מתכון עם קישור או מתכון מלא
+        const isLinkRecipe = document.querySelector('.recipe-type-toggle .btn[data-type="link"]').classList.contains('active');
         
-        if (name.length < 2) {
-            alert('שם המתכון חייב להכיל לפחות 2 תווים');
-            return;
-        }
-
-        if (isNaN(prepTime) || prepTime < 1) {
-            alert('נא להזין זמן הכנה תקין (מספר דקות)');
-            return;
-        }
-
         let recipe = {
+            id: this.currentEditingId || Date.now().toString(),
             name,
             category,
             prepTime,
-            ingredients: [],
-            instructions: []
+            storageInstructions,
+            isKosher,
+            isVegan,
+            isGlutenFree
         };
 
-        if (externalLink) {
-            if (!externalLink.startsWith('http://') && !externalLink.startsWith('https://')) {
-                alert('נא להזין קישור תקין המתחיל ב-http:// או https://');
+        if (isLinkRecipe) {
+            const externalLink = document.getElementById('recipeLink').value;
+            if (!externalLink) {
+                alert('נא להזין קישור למתכון');
                 return;
             }
             recipe.externalLink = externalLink;
+            recipe.ingredients = [];
+            recipe.instructions = [];
         } else {
-            const ingredients = form.recipeIngredients.value.split('\n').filter(line => line.trim());
-            const instructions = form.recipeInstructions.value.split('\n').filter(line => line.trim());
+            const ingredients = document.getElementById('recipeIngredients').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line !== '');
+            
+            const instructions = document.getElementById('recipeInstructions').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line !== '');
 
-            if (ingredients.length === 0) {
-                alert('יש להזין לפחות מרכיב אחד');
-                return;
-            }
-
-            if (instructions.length === 0) {
-                alert('יש להזין לפחות הוראת הכנה אחת');
+            if (!ingredients.length || !instructions.length) {
+                alert('נא למלא את שדות המרכיבים והוראות ההכנה');
                 return;
             }
 
@@ -539,8 +603,12 @@ class RecipeManager {
             recipe.instructions = instructions;
         }
 
+        if (!name || !category) {
+            alert('נא למלא את כל השדות הנדרשים');
+            return;
+        }
+
         if (this.currentEditingId) {
-            recipe.id = this.currentEditingId;
             this.updateRecipe(recipe);
         } else {
             this.addRecipe(recipe);
@@ -606,26 +674,31 @@ class RecipeManager {
             let shareText = "הנה המתכון/ים ששמתי באתר, תוכל לעשות שהם ישמרו גם אצלך על ידי העלאת הקובץ לאתר https://devbyai.github.io/my-Recipes/";
 
             if (recipeIds) {
-                // ייצוא מתכון בודד
                 recipesToExport = this.recipes.filter(recipe => recipeIds.includes(recipe.id));
                 const recipe = recipesToExport[0];
                 fileName = `${recipe.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_recipe.json`;
             } else {
-                // ייצוא כל המתכונים
                 recipesToExport = this.recipes;
                 fileName = 'all_recipes.json';
             }
 
+            // עדכון המתכונים לייצוא כדי לוודא שיש הוראות אחסון
+            recipesToExport = recipesToExport.map(recipe => ({
+                ...recipe,
+                storageInstructions: recipe.storageInstructions || '',
+                textDirection: 'rtl'  // הוספת שדה לציון כיוון הטקסט
+            }));
+
             const exportData = {
                 recipes: recipesToExport,
                 exportDate: new Date().toISOString(),
-                version: '1.0'
+                version: '1.0',
+                textDirection: 'rtl'  // הוספת שדה לציון כיוון הטקסט
             };
 
             const jsonStr = JSON.stringify(exportData, null, 2);
             const blob = new Blob([jsonStr], { type: 'application/json' });
 
-            // בדיקה אם הדפדפן תומך ב-Web Share API
             if (navigator.share) {
                 const file = new File([blob], fileName, { type: 'application/json' });
                 navigator.share({
@@ -637,7 +710,6 @@ class RecipeManager {
                     this.downloadFile(blob, fileName);
                 });
             } else {
-                // אם אין תמיכה בשיתוף, הורד את הקובץ
                 this.downloadFile(blob, fileName);
             }
         } catch (error) {
@@ -684,7 +756,6 @@ class RecipeManager {
                 try {
                     const data = JSON.parse(event.target.result);
                     
-                    // בדיקה אם הקובץ הוא מערך או אובייקט
                     let recipesToImport = [];
                     
                     if (Array.isArray(data)) {
@@ -697,7 +768,6 @@ class RecipeManager {
                         throw new Error('פורמט קובץ לא תקין');
                     }
                     
-                    // בדיקה שכל המתכונים מכילים את השדות הנדרשים
                     const validRecipes = recipesToImport.filter(recipe => {
                         return recipe && 
                                typeof recipe === 'object' && 
@@ -709,20 +779,21 @@ class RecipeManager {
                         throw new Error('לא נמצאו מתכונים תקינים בקובץ');
                     }
                     
-                    // הוספת ID ייחודי לכל מתכון מיובא אם אין לו כבר ID
                     validRecipes.forEach(recipe => {
                         if (!recipe.id) {
                             recipe.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                         }
                         recipe.ingredients = recipe.ingredients || [];
                         recipe.instructions = recipe.instructions || [];
+                        recipe.storageInstructions = recipe.storageInstructions || '';
+                        // שמירה על כיוון טקסט מימין לשמאל
+                        if (recipe.textDirection !== 'rtl') {
+                            recipe.textDirection = 'rtl';
+                        }
                     });
                     
-                    // הוספת המתכונים החדשים
                     this.recipes = [...this.recipes, ...validRecipes];
                     this.saveRecipes();
-                    
-                    // קריאה מחדש לרינדור כדי להוסיף את כל מאזיני האירועים
                     this.renderRecipes();
                     
                     alert(`יובאו ${validRecipes.length} מתכונים בהצלחה!`);
@@ -798,9 +869,16 @@ class RecipeManager {
             filteredRecipes = filteredRecipes.filter(recipe => recipe.category === category);
         }
 
-        grid.innerHTML = filteredRecipes.map(recipe => `
-            <div class="recipe-card ${recipe.externalLink ? 'external-link' : ''}" 
-                data-recipe-id="${recipe.id}">
+        // Clear existing content and event listeners
+        grid.innerHTML = '';
+
+        // Create and append recipe cards one by one
+        filteredRecipes.forEach(recipe => {
+            const card = document.createElement('div');
+            card.className = `recipe-card ${recipe.externalLink ? 'external-link' : ''}`;
+            card.dataset.recipeId = recipe.id;
+            
+            card.innerHTML = `
                 <h3>${recipe.name}</h3>
                 <div class="recipe-info">
                     <span class="category">${recipe.category}</span>
@@ -826,20 +904,12 @@ class RecipeManager {
                         <i class="fas fa-trash"></i> הסר מתכון
                     </button>
                 </div>
-            </div>
-        `).join('');
+            `;
 
-        // Add event listeners to all recipe cards
-        grid.querySelectorAll('.recipe-card').forEach(card => {
-            const recipeId = card.dataset.recipeId;
-            const recipe = this.recipes.find(r => r.id === recipeId);
-            
-            if (!recipe) return;
-
-            // View recipe button
+            // Add event listeners
             const viewBtn = card.querySelector('.view-recipe-btn');
             if (viewBtn) {
-                viewBtn.addEventListener('click', (e) => {
+                viewBtn.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (recipe.externalLink) {
@@ -847,49 +917,49 @@ class RecipeManager {
                     } else {
                         this.showViewModal(recipe);
                     }
-                });
+                };
             }
 
-            // Edit button
             const editBtn = card.querySelector('.edit-recipe-btn');
             if (editBtn) {
-                editBtn.addEventListener('click', (e) => {
+                editBtn.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     this.showEditModal(recipe);
-                });
+                };
             }
 
-            // Favorite button
             const favoriteBtn = card.querySelector('.favorite-btn');
             if (favoriteBtn) {
-                favoriteBtn.addEventListener('click', (e) => {
+                favoriteBtn.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    this.toggleFavorite(recipeId);
-                });
+                    this.toggleFavorite(recipe.id);
+                };
             }
 
-            // Delete button
             const deleteBtn = card.querySelector('.delete-recipe-btn');
             if (deleteBtn) {
-                deleteBtn.addEventListener('click', (e) => {
+                deleteBtn.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (confirm('האם אתה בטוח שברצונך למחוק מתכון זה? פעולה זו אינה הפיכה!')) {
-                        this.deleteRecipe(recipeId);
+                        this.deleteRecipe(recipe.id);
                     }
-                });
+                };
             }
 
-            // Click on the card itself
-            card.addEventListener('click', () => {
+            // Card click event
+            card.onclick = () => {
                 if (recipe.externalLink) {
                     window.open(recipe.externalLink, '_blank');
                 } else {
                     this.showViewModal(recipe);
                 }
-            });
+            };
+
+            // Append the card to the grid
+            grid.appendChild(card);
         });
     }
 
@@ -1282,6 +1352,158 @@ class RecipeManager {
         // Handle close button
         this.closeInstructionsBtn.addEventListener('click', () => this.closeImportExportInstructions());
         this.closeInstructionsXBtn.addEventListener('click', () => this.closeImportExportInstructions());
+    }
+
+    showUpdateNotification() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content update-notification">
+                <h2><i class="fas fa-exclamation-triangle"></i> הודעה חשובה - עדכון משמעותי!</h2>
+                <div class="update-message">
+                    <p>ברוכים הבאים לגרסה החדשה של האתר! 🎉</p>
+                    <p>בוצע עדכון משמעותי שמשפר את חווית השימוש באתר.</p>
+                    <p><strong>חשוב מאוד:</strong> על מנת שהאתר יעבוד בצורה תקינה עם התכונות החדשות, יש לבצע את הפעולות הבאות:</p>
+                    <ol>
+                        <li>ייצא את כל המתכונים הקיימים למחשב שלך (שמירת גיבוי)</li>
+                        <li>מחק את כל המתכונים מהאתר</li>
+                        <li>העלה מחדש את המתכונים מקובץ הגיבוי</li>
+                    </ol>
+                    <p>פעולה זו תבטיח שכל המתכונים שלך יעבדו בצורה מיטבית עם התכונות החדשות!</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn primary-btn" id="startUpdateBtn">
+                        <i class="fas fa-check"></i> הבנתי, בוא נתחיל
+                    </button>
+                    <button class="btn" id="remindLaterBtn">
+                        <i class="fas fa-clock"></i> תזכיר לי מאוחר יותר
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // הוספת מאזיני אירועים לכפתורים
+        const startUpdateBtn = modal.querySelector('#startUpdateBtn');
+        const remindLaterBtn = modal.querySelector('#remindLaterBtn');
+
+        startUpdateBtn.addEventListener('click', () => {
+            localStorage.setItem('updateNotificationShown', 'true');
+            modal.remove();
+            this.showExportAllPrompt();
+        });
+
+        remindLaterBtn.addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    showExportAllPrompt() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3><i class="fas fa-file-export"></i> ייצוא המתכונים</h3>
+                <p>ראשית, בוא נייצא את כל המתכונים שלך לקובץ גיבוי.</p>
+                <div class="modal-actions">
+                    <button class="btn primary-btn" id="exportNowBtn">
+                        <i class="fas fa-download"></i> ייצא עכשיו
+                    </button>
+                    <button class="btn" id="cancelBtn">
+                        <i class="fas fa-times"></i> ביטול
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const exportNowBtn = modal.querySelector('#exportNowBtn');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+
+        exportNowBtn.addEventListener('click', () => {
+            this.handleExportAll();
+            modal.remove();
+            this.showDeleteAllPrompt();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    showDeleteAllPrompt() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3><i class="fas fa-trash"></i> מחיקת כל המתכונים</h3>
+                <p>עכשיו, לאחר שייצאת את המתכונים, נמחק את כל המתכונים מהאתר.</p>
+                <div class="modal-actions">
+                    <button class="btn danger-btn" id="deleteAllBtn">
+                        <i class="fas fa-trash"></i> מחק הכל
+                    </button>
+                    <button class="btn" id="cancelBtn">
+                        <i class="fas fa-times"></i> ביטול
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const deleteAllBtn = modal.querySelector('#deleteAllBtn');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+
+        deleteAllBtn.addEventListener('click', () => {
+            if (confirm('האם אתה בטוח שברצונך למחוק את כל המתכונים? וידאת שיש לך גיבוי?')) {
+                this.recipes = [];
+                this.favorites = [];
+                this.saveRecipes();
+                localStorage.setItem('favorites', JSON.stringify(this.favorites));
+                this.renderRecipes();
+                modal.remove();
+                this.showImportPrompt();
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    showImportPrompt() {
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3><i class="fas fa-file-import"></i> ייבוא המתכונים מחדש</h3>
+                <p>לסיום, בוא נייבא את המתכונים מקובץ הגיבוי שיצרת.</p>
+                <div class="modal-actions">
+                    <button class="btn primary-btn" id="importNowBtn">
+                        <i class="fas fa-upload"></i> ייבא עכשיו
+                    </button>
+                    <button class="btn" id="cancelBtn">
+                        <i class="fas fa-times"></i> ייבא מאוחר יותר
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const importNowBtn = modal.querySelector('#importNowBtn');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+
+        importNowBtn.addEventListener('click', () => {
+            this.handleImportAll();
+            modal.remove();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            modal.remove();
+        });
     }
 }
 

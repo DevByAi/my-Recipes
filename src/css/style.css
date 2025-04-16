@@ -980,3 +980,49 @@ body {
 .recipe-view .prep-time i {
     color: var(--accent-color);
 }
+
+/* Update Notification Styles */
+.update-notification {
+    max-width: 600px !important;
+}
+
+.update-notification h2 {
+    color: var(--accent-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.update-notification h2 i {
+    color: #ff9800;
+}
+
+.update-message {
+    margin: 20px 0;
+    line-height: 1.6;
+}
+
+.update-message p {
+    margin-bottom: 15px;
+}
+
+.update-message ol {
+    margin: 15px 30px;
+    padding-right: 20px;
+}
+
+.update-message ol li {
+    margin-bottom: 10px;
+}
+
+.update-message strong {
+    color: var(--accent-color);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
