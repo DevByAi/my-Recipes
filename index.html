@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ספר המתכונים שלי</title>
+    <link rel="stylesheet" href="src/css/style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="top-nav">
+            <div class="nav-brand">ספר המתכונים שלי</div>
+            <div class="nav-links">
+                <button id="addRecipeBtn" class="btn primary-btn">
+                    <i class="fas fa-plus"></i> מתכון חדש
+                </button>
+                <button id="importAllBtn" class="btn">
+                    <i class="fas fa-file-import"></i> ייבוא מתכונים
+                </button>
+                <button id="exportAllBtn" class="btn">
+                    <i class="fas fa-file-export"></i> ייצוא מתכונים
+                </button>
+                <button id="deleteAllBtn" class="btn danger-btn">
+                    <i class="fas fa-trash-alt"></i> מחק את כל המתכונים
+                </button>
+                <button id="manageCategoriesBtn" class="btn">
+                    <i class="fas fa-tags"></i> ניהול קטגוריות
+                </button>
+                <button id="darkModeToggle" class="btn">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="aboutBtn" class="btn">
+                    <i class="fas fa-info-circle"></i> אודות
+                </button>
+                <button id="runTestsBtn" class="btn dev-only" style="display: none;">
+                    <i class="fas fa-vial"></i> הרץ בדיקות
+                </button>
+            </div>
+            <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="חיפוש מתכונים..." class="search-input">
+                <select id="categoryFilter" class="category-select">
+                    <option value="">כל הקטגוריות</option>
+                    <option value="מנות-עיקריות">מנות עיקריות</option>
+                    <option value="קינוחים">קינוחים</option>
+                    <option value="מרקים">מרקים</option>
+                    <option value="סלטים">סלטים</option>
+                    <option value="תוספות">תוספות</option>
+                </select>
+                <button id="favoritesFilterBtn" class="btn">
+                    <i class="far fa-heart"></i> מועדפים
+                </button>
+            </div>
+        </div>
+
+        <div id="dropZone" class="drop-zone">
+            <div class="drop-zone-content">
+                <i class="fas fa-file-import fa-2x"></i>
+                <p>גרור לכאן קובץ JSON כדי לייבא מתכונים</p>
+                <p class="drop-zone-sub">או לחץ על כפתור "ייבוא מתכונים" בתפריט</p>
+            </div>
+        </div>
+
+        <div id="recipesGrid" class="recipes-grid">
+            <!-- Recipe cards will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Recipe Modal -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div id="recipeModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Recipe Modal -->
+    <div id="editRecipeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <form id="recipeForm">
+                <div class="form-group">
+                    <label for="recipeName">שם המתכון:</label>
+                    <input type="text" id="recipeName" required>
+                </div>
+                <div class="form-group">
+                    <label for="recipeCategory">קטגוריה:</label>
+                    <select id="recipeCategory" required>
+                        <!-- Categories will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prepTime">זמן הכנה (בדקות):</label>
+                    <input type="number" id="prepTime" min="1" placeholder="לדוגמה: 45" required>
+                </div>
+                <div class="form-group recipe-type-toggle">
+                    <label>סוג מתכון:</label>
+                    <div class="toggle-buttons">
+                        <button type="button" class="btn active" data-type="full">מתכון מלא</button>
+                        <button type="button" class="btn" data-type="link">קישור למתכון</button>
+                    </div>
+                </div>
+                <div class="form-group" id="recipeLinkGroup" style="display: none;">
+                    <label for="recipeLink">קישור למתכון:</label>
+                    <input type="url" id="recipeLink" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label for="recipeIngredients">מרכיבים (כל מרכיב בשורה חדשה):</label>
+                    <textarea id="recipeIngredients" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="recipeInstructions">הוראות הכנה (כל שלב בשורה חדשה):</label>
+                    <textarea id="recipeInstructions" required></textarea>
+                </div>
+                <button type="submit" class="btn primary-btn">שמור מתכון</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div class="about-content">
+                <h2>אודות</h2>
+                <div class="about-story">
+                    <p>הפרויקט הזה נולד מתוך צורך אמיתי בבית. ראיתי את ההורים שלי משתמשים בדפי מתכונים ישנים, דפים שנרטבו במהלך השנים, וספרי מתכונים בלויים שעברו במשפחה מדור לדור.</p>
+                    <p>נכון, יש היום אפליקציות פתקים בטלפון, אבל רציתי ליצור משהו מיוחד - פתרון שמשלב את הנוחות של הדיגיטל עם החום והאהבה שבספרי המתכונים המשפחתיים וכמובן הפשטות , לכן , לא תמצאו באתר דברים מסובכים או אתר שהוא ״רעשני״ מידי..</p>
+                    <p>האתר הזו היא תוצר של שיתוף פעולה - הרעיונות לעיצוב ולתכונות באו מהמשפחה והחברים, שעזרו לי להבין מה באמת חשוב למשתמשים בספר מתכונים דיגיטלי.</p>
+                </div>
+                <div class="about-contact">
+                    <a href="https://github.com/DevByAi" target="_blank" class="btn github-btn">
+                        <i class="fab fa-github"></i>
+                        לעמוד הגיטהאב שלי
+                    </a>
+                    <a href="mailto:devbyai495@gmail.com" class="btn email-btn">
+                        <i class="fas fa-envelope"></i>
+                        צור קשר
+                    </a>
+                </div>
+                <div class="features-list">
+                    <h3>תכונות עיקריות:</h3>
+                    <ul>
+                        <li>שמירת מתכונים מלאים או קישורים למתכונים חיצוניים</li>
+                        <li>ארגון מתכונים לפי קטגוריות</li>
+                        <li>חיפוש וסינון מתכונים</li>
+                        <li>שמירת מתכונים מועדפים</li>
+                        <li>ייבוא וייצוא מתכונים</li>
+                        <li>תמיכה במצב כהה/בהיר</li>
+                    </ul>
+                </div>
+                <div class="version">
+                    גרסה 1.0.0
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import/Export Instructions Modal -->
+    <div id="importExportInstructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>הסבר על ייבוא וייצוא מתכונים</h2>
+            <div class="instructions-content">
+                <div class="instruction-section">
+                    <h3>📤 איך לשתף מתכון או מתכונים?</h3>
+                    <p>כשלוחצים על כפתור שיתוף או ייצוא, יורד קובץ בפורמט JSON – זהו קובץ טקסט שכולל את כל פרטי המתכון או המתכונים שבחרת לשתף.</p>
+                    <p>אחרי שהקובץ ירד – אפשר לשלוח אותו לכל אחד/אחת דרך וואטסאפ, מייל, טלגרם או כל דרך אחרת שמתאימה לך.</p>
+                </div>
+                <div class="instruction-section">
+                    <h3>📥 איך לייבא קובץ שקיבלת?</h3>
+                    <p>קיבלת קובץ JSON? שמור/שמרי אותו על המכשיר שלך.</p>
+                    <p>כנס/י לאתר ובחר/י באפשרות ייבוא מתכון או ייבוא קובץ.</p>
+                    <p>בחר/י את הקובץ שקיבלת – והמתכון/ים יתווספו אוטומטית לרשימה שלך 😊</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="dontShowAgainBtn" class="btn">
+                    <i class="fas fa-eye-slash"></i> אל תציג שוב
+                </button>
+                <button id="closeInstructionsBtn" class="btn primary-btn">
+                    <i class="fas fa-check"></i> הבנתי
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/js/main.js"></script>
+    <!-- Load tests only in development -->
