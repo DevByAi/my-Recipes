@@ -432,7 +432,7 @@ class RecipeManager {
     showViewModal(recipe) {
         const modal = document.getElementById('recipeModal');
         const content = document.getElementById('recipeModalContent');
-        const canShare = navigator.share !== undefined;
+        const canShare = navigator.share !== undefined && navigator.canShare;
         
         content.innerHTML = `
             <div class="recipe-view">
@@ -532,12 +532,31 @@ class RecipeManager {
                         const filename = `מתכון.json`;
                         const file = new File([blob], filename, { type: 'application/json' });
 
-                        // שיתוף הטקסט והקובץ
-                        await navigator.share({
+                        // בדיקה אם המכשיר תומך בשיתוף קבצים
+                        const shareData = {
                             title: `מתכון: ${recipe.name}`,
                             text: shareText,
                             files: [file]
-                        });
+                        };
+
+                        if (navigator.canShare(shareData)) {
+                            await navigator.share(shareData);
+                        } else {
+                            // אם לא ניתן לשתף קבצים, נשתף רק את הטקסט ונוריד את הקובץ
+                            await navigator.share({
+                                title: `מתכון: ${recipe.name}`,
+                                text: shareText
+                            });
+                            // הורדת הקובץ
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }
                     } catch (error) {
                         console.error('Error sharing:', error);
                         alert('אירעה שגיאה בשיתוף המתכון. אנא נסה שוב.');
