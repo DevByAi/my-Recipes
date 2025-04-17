@@ -1302,3 +1302,135 @@ nav {
         background-color: var(--bg-secondary);
     }
 }
+
+/* Base styles */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+img, table {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Container widths */
+.nav-container,
+.search-container,
+.modal-content,
+.recipes-grid {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.recipe-card {
+    width: 100%;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+/* Updated media queries */
+@media (max-width: 430px) {
+    .nav-container {
+        padding: 0.5rem;
+    }
+
+    .nav-brand {
+        font-size: 1.2rem;
+    }
+
+    .search-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .search-input,
+    .category-select,
+    .btn {
+        width: 100%;
+    }
+
+    .recipes-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+
+    .recipe-card {
+        margin: 0.5rem 0;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 1rem auto;
+        padding: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+    .recipe-card-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .recipe-card-actions .btn {
+        width: 100%;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100vh;
+        background-color: var(--bg-primary);
+        flex-direction: column;
+        padding: 5rem 1rem 1rem;
+        transition: right 0.3s ease;
+        z-index: 1000;
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .about-content,
+    .instructions-content {
+        padding: 1rem;
+    }
+
+    .about-contact {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .about-contact .btn {
+        width: 100%;
+    }
+
+    .duplicate-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .duplicate-actions .btn {
+        width: 100%;
+    }
+}
